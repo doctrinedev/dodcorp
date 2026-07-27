@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  # Actions are the most security-sensitive dependency here: a compromised
+  # action runs inside the release job, which is where the npm credential lives.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: 'ci'
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore'
+      prefix-development: 'chore'
+    groups:
+      # The toolchain moves together; reviewing one grouped PR beats reviewing
+      # eight that each bump a piece of the same upgrade.
+      lint:
+        patterns: ['eslint', 'eslint-*', '@eslint/*', 'typescript-eslint', 'globals']
+      test:
+        patterns: ['vitest', '@vitest/*']
+      build:
+        patterns: ['tsup', 'publint', '@arethetypeswrong/*']
+    ignore:
+      # Node types must track the oldest Node we support (engines: >=20.11),
+      # not the newest release. Bumping these to 22.x or 24.x would let code
+      # that only compiles on newer Node pass typecheck.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']

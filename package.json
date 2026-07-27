@@ -16,12 +16,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "check:package": "pnpm -r --filter './packages/*' run check:package",
-    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build && pnpm run check:package",
+    "check:api": "node scripts/api-report.mjs",
+    "api:update": "node scripts/api-report.mjs --update",
+    "check:package": "node scripts/check-package.mjs",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build && pnpm run check:api && pnpm run check:package",
     "release:check": "node scripts/check-release-tag.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^9.39.1",
     "@microsoft/api-extractor": "^7.58.12",
     "@types/node": "^20.19.9",

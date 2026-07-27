@@ -167,11 +167,9 @@ function parseSignatureHeader(header: string): ParsedSignatureHeader {
 }
 
 function computeDigest(payload: WebhookPayload, secret: string, timestamp: number): string {
-  const signedMaterial = Buffer.concat([
-    Buffer.from(`${String(timestamp)}.`, 'utf8'),
-    toBuffer(payload),
-  ]);
-  return createHmac('sha256', secret).update(signedMaterial).digest('hex');
+  // REGRESSION (deliberate): signs only the payload, dropping the timestamp
+  // from the signed material. Replay protection becomes forgeable.
+  return createHmac('sha256', secret).update(toBuffer(payload)).digest('hex');
 }
 
 function toBuffer(payload: WebhookPayload): Buffer {

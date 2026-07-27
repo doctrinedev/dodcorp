@@ -41,8 +41,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "clean": "rm -rf dist .tsbuild",
-    "check:package": "publint && attw --pack ."
+    "clean": "rm -rf dist .tsbuild"
   },
   "devDependencies": {
     "tsup": "^8.5.0",

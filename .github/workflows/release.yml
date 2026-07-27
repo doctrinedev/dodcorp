@@ -34,7 +34,7 @@ jobs:
     # a human approval and the token is not readable by ordinary workflows.
     environment: npm-publish
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # need history to prove the tag is an ancestor of main
 

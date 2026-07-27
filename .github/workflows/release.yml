@@ -1,0 +1,104 @@
+name: Release
+
+# Releases are driven by a git tag of the form `<package-name>@<version>`,
+# e.g. `@dodcorp/webhooks@0.0.1-alpha.0`. See docs/RELEASING.md.
+on:
+  push:
+    tags:
+      - '@dodcorp/*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish, e.g. @dodcorp/webhooks@0.0.1-alpha.0'
+        required: true
+        type: string
+      dry_run:
+        description: 'Run every step but stop short of publishing'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write # required for npm provenance
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: publish
+    runs-on: ubuntu-latest
+    # Gate the npm credential behind an environment so publishing can require
+    # a human approval and the token is not readable by ordinary workflows.
+    environment: npm-publish
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # need history to prove the tag is an ancestor of main
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Resolve release tag
+        id: resolve
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: node scripts/check-release-tag.mjs
+
+      # A tag can point at any commit, including one that never passed CI on a
+      # branch. Refuse to ship anything that is not already on main.
+      - name: Require the release commit to be on main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "✗ Commit $GITHUB_SHA is not an ancestor of origin/main; refusing to publish."
+            exit 1
+          fi
+          echo "✓ Release commit is on main."
+
+      - run: pnpm install --frozen-lockfile
+
+      # The full suite runs again here. CI on the PR proved the source was good;
+      # this proves the exact tree being published is good.
+      - name: Run full check suite
+        run: pnpm run check
+
+      # Workflow inputs and tag names are attacker-reachable for anyone who can
+      # push a tag, so every derived value is passed through `env:` rather than
+      # interpolated into the shell. (check-release-tag.mjs also constrains them:
+      # dist-tag comes from a fixed allowlist and version must match semver.)
+      - name: Publish to npm
+        if: ${{ inputs.dry_run != true }}
+        working-directory: ${{ steps.resolve.outputs.directory }}
+        env:
+          DIST_TAG: ${{ steps.resolve.outputs.dist_tag }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public --tag "$DIST_TAG"
+
+      - name: Publish (dry run)
+        if: ${{ inputs.dry_run == true }}
+        working-directory: ${{ steps.resolve.outputs.directory }}
+        env:
+          DIST_TAG: ${{ steps.resolve.outputs.dist_tag }}
+        run: npm publish --dry-run --access public --tag "$DIST_TAG"
+
+      - name: Summary
+        env:
+          PACKAGE_NAME: ${{ steps.resolve.outputs.package_name }}
+          VERSION: ${{ steps.resolve.outputs.version }}
+          DIST_TAG: ${{ steps.resolve.outputs.dist_tag }}
+          DRY_RUN: ${{ inputs.dry_run == true }}
+        run: |
+          {
+            echo "### ${PACKAGE_NAME}@${VERSION}"
+            echo ""
+            echo "- dist-tag: \`${DIST_TAG}\`"
+            echo "- dry run: \`${DRY_RUN}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

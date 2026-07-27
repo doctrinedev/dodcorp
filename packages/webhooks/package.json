@@ -1,0 +1,51 @@
+{
+  "name": "@dodcorp/webhooks",
+  "version": "0.0.1-alpha.0",
+  "description": "Webhook signing and signature verification for DodCorp webhook deliveries.",
+  "keywords": ["webhook", "webhooks", "hmac", "signature", "verification"],
+  "license": "MIT",
+  "author": "DodCorp",
+  "homepage": "https://github.com/doctrinedev/dodcorp/tree/main/packages/webhooks#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doctrinedev/dodcorp.git",
+    "directory": "packages/webhooks"
+  },
+  "bugs": {
+    "url": "https://github.com/doctrinedev/dodcorp/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist .tsbuild",
+    "check:package": "publint && attw --pack ."
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  }
+}

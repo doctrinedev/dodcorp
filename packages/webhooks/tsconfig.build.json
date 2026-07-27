@@ -1,0 +1,17 @@
+// Build-only view of the package.
+//
+// `tsconfig.json` is the editor/typecheck project: it is `composite` (so
+// `tsc --build` can cache it) and includes tests. tsup's declaration builder
+// constructs its own program and cannot use a composite project, so it gets
+// this non-composite variant with tests excluded — published .d.ts files should
+// describe the public API only.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

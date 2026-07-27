@@ -41,6 +41,14 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      # ADR-0001 §Enforcement #1. Regenerates each package's public API surface
+      # from the built .d.ts and fails if the committed api-report.md drifted,
+      # so a semver-relevant change has to show up as a reviewable diff in the
+      # PR rather than relying on a reviewer to notice it. `pnpm api:update`
+      # refreshes the report locally.
+      - name: Check public API surface
+        run: pnpm run check:api
+
       # Catches broken "exports" maps and wrong type resolution before they
       # reach the registry, where a bad publish is immutable.
       - name: Validate publishable packages

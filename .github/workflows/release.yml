@@ -38,7 +38,7 @@ jobs:
         with:
           fetch-depth: 0 # need history to prove the tag is an ancestor of main
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v5
         with:
